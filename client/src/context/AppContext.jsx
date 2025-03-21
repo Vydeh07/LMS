@@ -3,17 +3,21 @@ import { createContext } from "react";
 import { dummyCourses } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import humanizeDuration from 'humanize-duration'
+import { useAuth, useUser } from '@clerk/clerk-react';
 
 export const AppContext = createContext()
 
 export const AppContextProvider = (props)=>{
     const currency = import.meta.env.VITE_CURRENCY   
     const navigate = useNavigate()
+
+    const {getToken} = useAuth()
+    const {user} = useUser()
     const [allCourses,setAllCourses] = useState([])
     const [isEducator,setIsEducator] = useState(true)
     const [enrolledCourses,setEnrolledCourses] = useState([])
     
-    //FEtch all courses
+    //Fetch all courses
     const fetchAllCourses = async ()=>{
         setAllCourses(dummyCourses)
 
@@ -45,7 +49,7 @@ export const AppContextProvider = (props)=>{
         course.courseContent.map((chapter)=> chapter.chapterContent.map(
             (lecture)=> time +=lecture.lectureDuration
         ))
-        return humanizeDuration(time * 60 * 100, {units:["h","m"]})
+        return humanizeDuration(time * 60 * 1000, {units:["h","m"]})
     }
     //function to calculate no of lectures in course
     const calculateNoofLectures =  (course)=>{
@@ -67,7 +71,19 @@ export const AppContextProvider = (props)=>{
     useEffect(()=>{
         fetchAllCourses()
         fetchUserEnrolledCourses()
-     },[])   
+     },[]) 
+
+     const logToken = async()=>{
+        console.log(await getToken()); 
+     }
+     useEffect(()=>{
+        if(user){
+            logToken()
+
+        }
+     },[user])
+     
+
       const value={
             currency,allCourses,navigate,calculateRating,isEducator,setIsEducator,calculateNoofLectures,calculateCourseDuration,calculateChapterTime,enrolledCourses,fetchUserEnrolledCourses
     }
